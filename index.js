@@ -23,21 +23,26 @@ app.get('/webhook', function (req, res) {
 
 // handler receiving messages
 app.post('/webhook', function (req, res) {
+    console.log(JSON.stringify(req, null, 4));
+    console.log("\n");
     var events = req.body.entry[0].messaging;
     for (i = 0; i < events.length; i++) {
         var event = events[i];
         if (event.message && event.message.text) {
-            if (!kittenMessage(event.sender.id, event.message.text)) {
-                sendMessage(event.sender.id, {text: "The weather is 15 C"});
-                                // sendMessage(event.sender.id, {text: "Echo: " + event.message.text});
-
-            }
+            processMessage(event.sender.id);
         } else if (event.postback) {
             console.log("Postback received: " + JSON.stringify(event.postback));
         }
     }
     res.sendStatus(200);
 });
+
+function processMessage(event){
+    senderId = event.sender.id;
+    message = event.message.text;
+
+    sendMessage(senderId, {text: "The weather is not 15 C"});
+}
 
 // generic function sending messages
 function sendMessage(recipientId, message) {
@@ -58,46 +63,19 @@ function sendMessage(recipientId, message) {
     });
 };
 
-// send rich message with kitten
-function kittenMessage(recipientId, text) {
-    
-    text = text || "";
-    var values = text.split(' ');
-    
-    if (values.length === 3 && values[0] === 'kitten') {
-        if (Number(values[1]) > 0 && Number(values[2]) > 0) {
-            
-            var imageUrl = "https://placekitten.com/" + Number(values[1]) + "/" + Number(values[2]);
-            
-            message = {
-                "attachment": {
-                    "type": "template",
-                    "payload": {
-                        "template_type": "generic",
-                        "elements": [{
-                            "title": "Kitten",
-                            "subtitle": "Cute kitten picture",
-                            "image_url": imageUrl ,
-                            "buttons": [{
-                                "type": "web_url",
-                                "url": imageUrl,
-                                "title": "Show kitten"
-                                }, {
-                                "type": "postback",
-                                "title": "I like this",
-                                "payload": "User " + recipientId + " likes kitten " + imageUrl,
-                            }]
-                        }]
-                    }
-                }
-            };
-    
-            sendMessage(recipientId, message);
-            
-            return true;
-        }
+function getCase(message){
+    // input: string message
+    // output: JSON with case and location fields
+    //          or throw error if can't figure it out
+    response = {
+        "case": "",
+        "location": ""
+    };
+    if (message == "weather in Evanston"){
+        response.case = "weather now";
+        response.location = "Evanston Illinois";
+        return response;
     }
-    
-    return false;
-    
-};
+    throw "could not figure parse message";
+    return -1;
+}
