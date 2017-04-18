@@ -29,7 +29,7 @@ app.post('/webhook', function (req, res) {
     for (i = 0; i < events.length; i++) {
         var event = events[i];
         if (event.message && event.message.text) {
-            processMessage(event.sender.id);
+            processMessage(event);
         } else if (event.postback) {
             console.log("Postback received: " + JSON.stringify(event.postback));
         }
@@ -40,7 +40,7 @@ app.post('/webhook', function (req, res) {
 function processMessage(event){
     senderId = event.sender.id;
     message = event.message.text;
-
+    sendMessage(senderId, {text: JSON.stringify(event, null, 4)});
     sendMessage(senderId, {text: "The weather is not 15 C"});
 }
 
